@@ -1,14 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 
-// const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// const users = [];
+const users = [];
 
 function checksExistsUserAccount(request, response, next) {
   // Complete aqui
@@ -16,6 +16,15 @@ function checksExistsUserAccount(request, response, next) {
 
 app.post('/users', (request, response) => {
   // Complete aqui
+  //recebendo  name e username
+  const{name,username}=request.body;
+
+  const usuario={
+    id:uuidv4(),
+    name:name,
+    username:username,
+    todos:[] 
+  };
 });
 
 app.get('/todos', checksExistsUserAccount, (request, response) => {
