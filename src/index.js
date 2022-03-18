@@ -25,10 +25,24 @@ app.post('/users', (request, response) => {
     username:username,
     todos:[] 
   };
+
+  users.push(usuario);
+  return this.response.json(usuario);
+
 });
+
+
 
 app.get('/todos', checksExistsUserAccount, (request, response) => {
   // Complete aqui
+  // Recebendo usuario
+  const{username} = request.header;
+  
+  const todos = username.todos;
+
+  return response.json(todos);
+
+
 });
 
 app.post('/todos', checksExistsUserAccount, (request, response) => {
