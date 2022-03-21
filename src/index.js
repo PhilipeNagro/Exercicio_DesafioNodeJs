@@ -8,6 +8,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
+const todos = [];
+
 const users = [
   {
     "id": "64cf7d46-8127-4d69-88b6-f2c50dd26c96",
@@ -33,8 +36,9 @@ app.post('/users', (request, response) => {
     username:username,
     todos:[] 
   };
-
+  
   users.push(usuario);
+  
   return response.json(usuario);
 
 });
@@ -50,12 +54,12 @@ app.get('/todos', checksExistsUserAccount, (request, response) => {
   // console.log(users);
 
   const procuraUser = users.find( (user)=>{ 
-    console.log(user);
+    // console.log(user);
     return user.username=== username;
   }); 
 
 
-  console.log(procuraUser);
+  // console.log(procuraUser);
   console.log(users);
 
   //Retornando um array com todas as tarefas === todos
@@ -67,19 +71,26 @@ app.get('/todos', checksExistsUserAccount, (request, response) => {
 
 app.post('/todos', checksExistsUserAccount, (request, response) => {
   // Complete aqui
-  const{username} = request.header;
-
+  const{username} = request.headers;
+  console.log(username);
+  const {deadline,title} = request.body;
+  
   //criando novo todo
   const newTodo={
     id:uuidv4(),
-    title:"",
+    title:title,
     done:false,
     deadline:new Date(deadline),
-    created_at: new Date(),
+    created_at: new Date()
   }
 
-  //Inserindo lista de todos 
-  todos.push(newTodo);
+  for( let i=0; i< users.length ; i++ ){
+    if(users[i].username === username){
+      users[i].todos.push(newTodo);
+    }
+    console.log(users[i]);
+  }  
+  
   return response.json(newTodo);
 
 });
@@ -87,6 +98,13 @@ app.post('/todos', checksExistsUserAccount, (request, response) => {
 app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
   // Complete aqui
 
+  const{username} = request.headers;
+  
+  
+  if(username === username.id){
+    username.title = title;
+    return response.json({msg: `title atualizado com sucesso`});
+  }
 
 });
 
