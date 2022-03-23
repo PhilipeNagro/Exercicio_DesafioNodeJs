@@ -20,6 +20,17 @@ const users = [
   }
 ];
 
+function procuraUsername(username){
+  const resultado = users.find( usuario => usuario.username === username);
+  return resultado;
+}
+function procuraName(name){
+  const resultado = users.find(usuario=> usuario.name === name);
+  return resultado;
+}
+
+
+
 function checksExistsUserAccount(request, response, next) {
   // Complete aqui
   next();
@@ -30,6 +41,7 @@ app.post('/users', (request, response) => {
   //recebendo  name e username
   const{name,username}=request.body;
 
+  //Objeto usuario
   const usuario={
     id:uuidv4(),
     name:name,
@@ -37,8 +49,14 @@ app.post('/users', (request, response) => {
     todos:[] 
   };
   
-  users.push(usuario);
-  
+  if((procuraUsername(username)===undefined)   && (procuraName(name)===undefined)){
+    users.push(usuario);
+    console.log("Usuario adicionado com sucesso");
+  }else{
+    console.log("Usuario ja existente");
+    return response.status(400).json({error: `Usuario ja existe`});
+  }
+  // users.push(usuario);
   return response.json(usuario);
 
 });
@@ -50,20 +68,24 @@ app.get('/todos', checksExistsUserAccount, (request, response) => {
   // Recebendo usuario
   const{username} = request.headers;
   
-  //const todos = username.todos;
-  // console.log(users);
-
-  const procuraUser = users.find( (user)=>{ 
+  const procuraUser = users.find((user)=>{ 
     // console.log(user);
+    
     return user.username=== username;
-  }); 
-
-
+  });
+  
+  if(procuraUser=== undefined){
+    console.log("Usuario nao existe");
+    return response.json({msg: `Usuario nao existe`}); 
+  }else{
   // console.log(procuraUser);
-  console.log(users);
+    console.log(`As tarefas do usuario ${procuraUser.username} sao: `)
+    console.log(procuraUser.todos);
 
-  //Retornando um array com todas as tarefas === todos
-  return response.json(procuraUser.todos);
+    //Concatena
+    //Retornando um array com todas as tarefas === todos
+    return response.json({msg:`Tarefas`,todos:procuraUser.todos});
+  }
 });
 
 
@@ -119,10 +141,3 @@ app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
 module.exports = app;
 
 
-/*
-{
-
-  - Olhar rota post/
-}
-
-*/
