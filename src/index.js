@@ -14,7 +14,7 @@ const todos = [];
 
 const tarefaPronta = [
   {
-    "id_Tarefa": "19f2cb05-0c0f-428b-9846-e61276f29ffb",
+    "id": "19f2cb05-0c0f-428b-9846-e61276f29ffb",
     "title": "Tarefa exemplo",
     "done": false,
     "deadline": "2021-02-27T00:00:00.000Z",
@@ -45,9 +45,16 @@ function procuraID(id){
 
 function retornaTarefaPorIndexUsuario(indexUsername,idTarefa){
   console.log(idTarefa);
-  const resultado = users[indexUsername].todos.find(todo=> todo.id_Tarefa===idTarefa);
+  const resultado = users[indexUsername].todos.find(todo=> todo.id===idTarefa);
   return resultado;
 }
+
+function retornaTarefaPorIndexUsuario1(indexUsername,idTarefa){
+  console.log(idTarefa);
+  const resultado = users[indexUsername].todos.findIndex(todo=> todo.id===idTarefa);
+  return resultado;
+}
+
 //Pegando o index do Objeto
 function ProcuraIndexUsername(username){
   const resultado= users.findIndex(usuario=>usuario.username===username)
@@ -74,7 +81,7 @@ app.post('/users', (request, response) => {
 
   
   
-  if((procuraUsername(username)===undefined)   && (procuraName(name)===undefined)){
+  if((procuraUsername(username)===undefined)){
     users.push(usuario);
     console.log("Usuario adicionado com sucesso");
   }else{
@@ -82,7 +89,7 @@ app.post('/users', (request, response) => {
     return response.status(400).json({error: `Usuario ja existe`});
   }
   
-  return response.json(usuario);
+  return response.status(201).json(usuario);
 });
 
 
@@ -108,7 +115,8 @@ app.get('/todos', checksExistsUserAccount, (request, response) => {
 
     //Concatena
     //Retornando um array com todas as tarefas === todos
-    return response.json({msg:`Tarefas do usuario ${username}`,todos:procuraUser.todos});
+    // return response.json({msg:`Tarefas do usuario ${username}`,todos:procuraUser.todos});
+    return response.json(procuraUser.todos);
   }
 });
 
@@ -126,7 +134,7 @@ app.post('/todos', checksExistsUserAccount, (request, response) => {
   // }
   //criando novo todo
   const newTodo={
-    id_Tarefa:uuidv4(),
+    id:uuidv4(),
     title:title,
     done:false,
     deadline:new Date(deadline),
@@ -141,7 +149,7 @@ app.post('/todos', checksExistsUserAccount, (request, response) => {
     }
     console.log(`Novo todo para ${users[i]}, agora suas tarefas sao: ${users[i].todos}`);
   }  
-  return response.json(newTodo);
+  return response.status(201).json(newTodo);
   
 });
 
@@ -170,14 +178,61 @@ app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
       
       return response.json(tarefaEncontrada);
     }
+
 });
 
 app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
   // Complete aqui
+  const {username} = request.headers;
+  const {id} = request.params; 
+  const{done}=request.body;
+
+
+  //Procuro o Usuario
+  const UsuarioEncontrado = ProcuraIndexUsername(username);
+  if(UsuarioEncontrado=== -1){
+    console.log("Usuario nao encontrado pelo Username");
+  }else{
+    console.log(users[UsuarioEncontrado])
+    //Procurar id da tarefa do usuario
+      const tarefaEncontrada = retornaTarefaPorIndexUsuario(UsuarioEncontrado,id);
+      tarefaEncontrada.done=true;
+      console.log("Status da Tarefa alterada parada Done");
+      // console.log(IDtarefaEncontrada);
+      
+      return response.json(tarefaEncontrada);
+    }
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
   // Complete aqui
+  console.log("username");
+  const {username}=request.headers;
+  console.log(username);
+  const{id}=request.params;
+
+  //Procuro o Usuario
+  const UsuarioEncontrado = ProcuraIndexUsername(username);
+  if(UsuarioEncontrado=== -1){
+    console.log("Usuario nao encontrado pelo Username");
+  }else{
+    console.log(users[UsuarioEncontrado])
+    //Procurar id da tarefa do usuario
+      const TarefaEncontradaIndex = retornaTarefaPorIndexUsuario1(UsuarioEncontrado,id);
+      if(TarefaEncontradaIndex===-1){
+          ///ERRROR 404
+          console.log("Tarefa nao existe");
+          return response.status(404).json({error: `Tarefa nao existe`});
+      }else{
+        const TarefaDeletada = users[UsuarioEncontrado].todos.splice(TarefaEncontradaIndex,1);
+        // console.log(IDTarefaEncontradaIndex);
+        console.log("Usuario deletado com sucesso!");
+        return response.status(204).json(TarefaDeletada);
+        
+      }
+      
+      
+    }
 });
 
 module.exports = app;
