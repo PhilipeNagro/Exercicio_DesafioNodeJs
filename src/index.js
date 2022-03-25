@@ -11,12 +11,22 @@ app.use(express.json());
 
 const todos = [];
 
+
+const tarefaPronta = [
+  {
+    "id_Tarefa": "19f2cb05-0c0f-428b-9846-e61276f29ffb",
+    "title": "Tarefa exemplo",
+    "done": false,
+    "deadline": "2021-02-27T00:00:00.000Z",
+    "created_at": "2022-03-24T14:17:53.401Z"
+  }
+]
 const users = [
   {
     "id": "64cf7d46-8127-4d69-88b6-f2c50dd26c96",
     "name": "PH",
     "username": "PH1",
-    "todos": []
+    "todos": tarefaPronta
   }
 ];
 
@@ -28,8 +38,21 @@ function procuraName(name){
   const resultado = users.find(usuario=> usuario.name === name);
   return resultado;
 }
+function procuraID(id){
+  const resultado = users.find(usuario => usuario.id === id);
+  return resultado;
+}
 
-
+function retornaTarefaPorIndexUsuario(indexUsername,idTarefa){
+  console.log(idTarefa);
+  const resultado = users[indexUsername].todos.find(todo=> todo.id_Tarefa===idTarefa);
+  return resultado;
+}
+//Pegando o index do Objeto
+function ProcuraIndexUsername(username){
+  const resultado= users.findIndex(usuario=>usuario.username===username)
+  return resultado;
+}
 
 function checksExistsUserAccount(request, response, next) {
   // Complete aqui
@@ -48,6 +71,8 @@ app.post('/users', (request, response) => {
     username:username,
     todos:[] 
   };
+
+  
   
   if((procuraUsername(username)===undefined)   && (procuraName(name)===undefined)){
     users.push(usuario);
@@ -56,9 +81,8 @@ app.post('/users', (request, response) => {
     console.log("Usuario ja existente");
     return response.status(400).json({error: `Usuario ja existe`});
   }
-  // users.push(usuario);
+  
   return response.json(usuario);
-
 });
 
 
@@ -84,7 +108,7 @@ app.get('/todos', checksExistsUserAccount, (request, response) => {
 
     //Concatena
     //Retornando um array com todas as tarefas === todos
-    return response.json({msg:`Tarefas`,todos:procuraUser.todos});
+    return response.json({msg:`Tarefas do usuario ${username}`,todos:procuraUser.todos});
   }
 });
 
@@ -94,40 +118,58 @@ app.get('/todos', checksExistsUserAccount, (request, response) => {
 app.post('/todos', checksExistsUserAccount, (request, response) => {
   // Complete aqui
   const{username} = request.headers;
-  console.log(username);
   const {deadline,title} = request.body;
-  
+
+  // console.log(request.body);
+  // if(title===undefined){
+  //   console.log("Nao ta passando title");
+  // }
   //criando novo todo
   const newTodo={
-    id:uuidv4(),
+    id_Tarefa:uuidv4(),
     title:title,
     done:false,
     deadline:new Date(deadline),
     created_at: new Date()
   }
 
+  // Percorrendo users
   for( let i=0; i< users.length ; i++ ){
     if(users[i].username === username){
+      console.log(newTodo);
       users[i].todos.push(newTodo);
     }
-    console.log(users[i]);
+    console.log(`Novo todo para ${users[i]}, agora suas tarefas sao: ${users[i].todos}`);
   }  
-  
   return response.json(newTodo);
-
+  
 });
 
 app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
   // Complete aqui
 
   const{username} = request.headers;
+  console.log(username);
+  const {deadline,title} = request.body;
+  const {id} = request.params; 
   
-  
-  if(username === username.id){
-    username.title = title;
-    return response.json({msg: `title atualizado com sucesso`});
-  }
+  //Procuro o Usuario
+  const UsuarioEncontrado = ProcuraIndexUsername(username);
 
+  
+
+  if(UsuarioEncontrado=== -1){
+    console.log("Usuario nao encontrado pelo Username");
+  }else{
+    console.log(users[UsuarioEncontrado])
+    //Procurar id da tarefa do usuario
+      const tarefaEncontrada = retornaTarefaPorIndexUsuario(UsuarioEncontrado,id);
+      tarefaEncontrada.title = title;
+      tarefaEncontrada.deadline = deadline;
+      // console.log(IDtarefaEncontrada);
+      
+      return response.json(tarefaEncontrada);
+    }
 });
 
 app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
@@ -141,3 +183,6 @@ app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
 module.exports = app;
 
 
+
+/// CORREÇÔES
+// rota put
