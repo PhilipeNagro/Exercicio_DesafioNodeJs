@@ -172,11 +172,20 @@ app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
     console.log(users[UsuarioEncontrado])
     //Procurar id da tarefa do usuario
       const tarefaEncontrada = retornaTarefaPorIndexUsuario(UsuarioEncontrado,id);
-      tarefaEncontrada.title = title;
-      tarefaEncontrada.deadline = deadline;
+      if(tarefaEncontrada === undefined){
+        console.log("Tarefa nao encontrada");
+        return response.status(404).json({error: `Tarefa nao existe`});
+      }else{
+        console.log(tarefaEncontrada);
+        console.log("TAREFA ENCONTRA ACIMA")
+        tarefaEncontrada.title = title;
+        tarefaEncontrada.deadline = deadline;
+        
+        return response.json(tarefaEncontrada);
+      }
+      
       // console.log(IDtarefaEncontrada);
       
-      return response.json(tarefaEncontrada);
     }
 
 });
@@ -196,11 +205,19 @@ app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
     console.log(users[UsuarioEncontrado])
     //Procurar id da tarefa do usuario
       const tarefaEncontrada = retornaTarefaPorIndexUsuario(UsuarioEncontrado,id);
-      tarefaEncontrada.done=true;
-      console.log("Status da Tarefa alterada parada Done");
+      if(tarefaEncontrada === undefined){
+        console.log("ID DA TAREFA N ENCOTRADO");
+        return response.status(404).json({error: `Tarefa nao existe`});
+     
+      }else{
+        console.log(tarefaEncontrada);
+        tarefaEncontrada.done=true;
+        console.log("Status da Tarefa alterada parada Done");
+        return response.json(tarefaEncontrada);
+      }
+      
       // console.log(IDtarefaEncontrada);
       
-      return response.json(tarefaEncontrada);
     }
 });
 
@@ -228,10 +245,7 @@ app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
         // console.log(IDTarefaEncontradaIndex);
         console.log("Usuario deletado com sucesso!");
         return response.status(204).json(TarefaDeletada);
-        
       }
-      
-      
     }
 });
 
