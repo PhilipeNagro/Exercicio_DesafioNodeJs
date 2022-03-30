@@ -30,36 +30,36 @@ const users = [
   }
 ];
 
-function procuraUsername(username){
-  const resultado = users.find( usuario => usuario.username === username);
-  return resultado;
-}
-function procuraName(name){
-  const resultado = users.find(usuario=> usuario.name === name);
-  return resultado;
-}
-function procuraID(id){
-  const resultado = users.find(usuario => usuario.id === id);
-  return resultado;
-}
+// function procuraUsername(username){
+//   const resultado = users.find( usuario => usuario.username === username);
+//   return resultado;
+// }
+// function procuraName(name){
+//   const resultado = users.find(usuario=> usuario.name === name);
+//   return resultado;
+// }
+// function procuraID(id){
+//   const resultado = users.find(usuario => usuario.id === id);
+//   return resultado;
+// }
 
-function retornaTarefaPorIndexUsuario(indexUsername,idTarefa){
-  console.log(idTarefa);
-  const resultado = users[indexUsername].todos.find(todo=> todo.id===idTarefa);
-  return resultado;
-}
+// function retornaTarefaPorIndexUsuario(indexUsername,idTarefa){
+//   console.log(idTarefa);
+//   const resultado = users[indexUsername].todos.find(todo=> todo.id===idTarefa);
+//   return resultado;
+// }
 
-function retornaTarefaPorIndexUsuario1(indexUsername,idTarefa){
-  console.log(idTarefa);
-  const resultado = users[indexUsername].todos.findIndex(todo=> todo.id===idTarefa);
-  return resultado;
-}
+// function retornaTarefaPorIndexUsuario1(indexUsername,idTarefa){
+//   console.log(idTarefa);
+//   const resultado = users[indexUsername].todos.findIndex(todo=> todo.id===idTarefa);
+//   return resultado;
+// }
 
-//Pegando o index do Objeto
-function ProcuraIndexUsername(username){
-  const resultado= users.findIndex(usuario=>usuario.username===username)
-  return resultado;
-}
+// //Pegando o index do Objeto
+// function ProcuraIndexUsername(username){
+//   const resultado= users.findIndex(usuario=>usuario.username===username)
+//   return resultado;
+// }
 
 function checksExistsUserAccount(request, response, next) {
   // Complete aqui
@@ -79,16 +79,13 @@ app.post('/users', (request, response) => {
     todos:[] 
   };
 
-  
-  
-  if((procuraUsername(username)===undefined)){
+  const findUsername = users.find(user => user.username === username);
+  if(!findUsername){
     users.push(usuario);
-    console.log("Usuario adicionado com sucesso");
+    console.log("Usuario adicionado com sucesso");  
   }else{
-    console.log("Usuario ja existente");
     return response.status(400).json({error: `Usuario ja existe`});
   }
-  
   return response.status(201).json(usuario);
 });
 
@@ -96,43 +93,24 @@ app.post('/users', (request, response) => {
 
 app.get('/todos', checksExistsUserAccount, (request, response) => {
   // Complete aqui
-  // Recebendo usuario
   const{username} = request.headers;
-  
   const procuraUser = users.find((user)=>{ 
-    // console.log(user);
-    
     return user.username=== username;
   });
-  
-  if(procuraUser=== undefined){
+
+  if(!procuraUser){
     console.log("Usuario nao existe");
-    return response.json({msg: `Usuario nao existe`}); 
-  }else{
-  // console.log(procuraUser);
-    console.log(`As tarefas do usuario ${procuraUser.username} sao: `)
-    console.log(procuraUser.todos);
-
-    //Concatena
-    //Retornando um array com todas as tarefas === todos
-    // return response.json({msg:`Tarefas do usuario ${username}`,todos:procuraUser.todos});
-    return response.json(procuraUser.todos);
+    return response.status(400).json({msg: `Usuario nao existe`}); 
   }
+  return response.status(200).json(procuraUser.todos);
+  
 });
-
-
 
 
 app.post('/todos', checksExistsUserAccount, (request, response) => {
   // Complete aqui
   const{username} = request.headers;
   const {deadline,title} = request.body;
-
-  // console.log(request.body);
-  // if(title===undefined){
-  //   console.log("Nao ta passando title");
-  // }
-  //criando novo todo
   const newTodo={
     id:uuidv4(),
     title:title,
@@ -147,7 +125,6 @@ app.post('/todos', checksExistsUserAccount, (request, response) => {
       console.log(newTodo);
       users[i].todos.push(newTodo);
     }
-    console.log(`Novo todo para ${users[i]}, agora suas tarefas sao: ${users[i].todos}`);
   }  
   return response.status(201).json(newTodo);
   
@@ -157,37 +134,22 @@ app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
   // Complete aqui
 
   const{username} = request.headers;
-  console.log(username);
   const {deadline,title} = request.body;
   const {id} = request.params; 
+  const usuario = users.find( user => user.username === username);
   
-  //Procuro o Usuario
-  const UsuarioEncontrado = ProcuraIndexUsername(username);
+  if(!usuario){
+    return response.status(404).json({error: `Usuario nao encontrado`});
+  }
 
-  
+  const findTodo = usuario.todos.find( todo => todo.id === id);
 
-  if(UsuarioEncontrado=== -1){
-    console.log("Usuario nao encontrado pelo Username");
-  }else{
-    console.log(users[UsuarioEncontrado])
-    //Procurar id da tarefa do usuario
-      const tarefaEncontrada = retornaTarefaPorIndexUsuario(UsuarioEncontrado,id);
-      if(tarefaEncontrada === undefined){
-        console.log("Tarefa nao encontrada");
-        return response.status(404).json({error: `Tarefa nao existe`});
-      }else{
-        console.log(tarefaEncontrada);
-        console.log("TAREFA ENCONTRA ACIMA")
-        tarefaEncontrada.title = title;
-        tarefaEncontrada.deadline = deadline;
-        
-        return response.json(tarefaEncontrada);
-      }
-      
-      // console.log(IDtarefaEncontrada);
-      
-    }
-
+  if(!findTodo){
+    return response.status(404).json({error: `Tarefa nao encontrada`});
+  }
+  findTodo.deadline = deadline;
+  findTodo.title = title;
+  return response.status(200).json(findTodo);
 });
 
 app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
@@ -196,62 +158,35 @@ app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
   const {id} = request.params; 
   const{done}=request.body;
 
-
-  //Procuro o Usuario
-  const UsuarioEncontrado = ProcuraIndexUsername(username);
-  if(UsuarioEncontrado=== -1){
-    console.log("Usuario nao encontrado pelo Username");
-  }else{
-    console.log(users[UsuarioEncontrado])
-    //Procurar id da tarefa do usuario
-      const tarefaEncontrada = retornaTarefaPorIndexUsuario(UsuarioEncontrado,id);
-      if(tarefaEncontrada === undefined){
-        console.log("ID DA TAREFA N ENCOTRADO");
-        return response.status(404).json({error: `Tarefa nao existe`});
-     
-      }else{
-        console.log(tarefaEncontrada);
-        tarefaEncontrada.done=true;
-        console.log("Status da Tarefa alterada parada Done");
-        return response.json(tarefaEncontrada);
-      }
-      
-      // console.log(IDtarefaEncontrada);
-      
-    }
+  const usuario = users.find( user => user.username === username);
+  if(!usuario){
+    return response.status(404).json({error: `Usuario nao encontrado`});
+  }
+  const findTodo = usuario.todos.find(todo =>todo.id ===id);
+  if(!findTodo){
+    return response.status(404).json({error: `Tarefa nao encontrada`});
+  } 
+  findTodo.done = true;
+  return response.status(200).json(findTodo);
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
   // Complete aqui
-  console.log("username");
-  const {username}=request.headers;
-  console.log(username);
-  const{id}=request.params;
 
-  //Procuro o Usuario
-  const UsuarioEncontrado = ProcuraIndexUsername(username);
-  if(UsuarioEncontrado=== -1){
-    console.log("Usuario nao encontrado pelo Username");
-  }else{
-    console.log(users[UsuarioEncontrado])
-    //Procurar id da tarefa do usuario
-      const TarefaEncontradaIndex = retornaTarefaPorIndexUsuario1(UsuarioEncontrado,id);
-      if(TarefaEncontradaIndex===-1){
-          ///ERRROR 404
-          console.log("Tarefa nao existe");
-          return response.status(404).json({error: `Tarefa nao existe`});
-      }else{
-        const TarefaDeletada = users[UsuarioEncontrado].todos.splice(TarefaEncontradaIndex,1);
-        // console.log(IDTarefaEncontradaIndex);
-        console.log("Usuario deletado com sucesso!");
-        return response.status(204).json(TarefaDeletada);
-      }
-    }
+  const {username}=request.headers;
+
+  const{id}=request.params;
+  const usuario = users.find(user => user.username === username);
+  if(!usuario){
+    return response.status(404).json({error: `Usuario nao encontrado`});
+  }
+  const findTodo = usuario.todos.find(todo => todo.id === id);
+  if(!findTodo){
+    return response.status(404).json({error: `Tarefa nao encotrada`});
+  }
+  usuario.todos.splice(findTodo,1);
+  console.log("Tarefa removida com sucesso");
+  return response.status(204).json(findTodo);
 });
 
 module.exports = app;
-
-
-
-/// CORREÇÔES
-// rota put
