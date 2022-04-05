@@ -8,67 +8,25 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-
 const todos = [];
-
-
-const tarefaPronta = [
-  {
-    "id": "19f2cb05-0c0f-428b-9846-e61276f29ffb",
-    "title": "Tarefa exemplo",
-    "done": false,
-    "deadline": "2021-02-27T00:00:00.000Z",
-    "created_at": "2022-03-24T14:17:53.401Z"
-  }
-]
-const users = [
-  {
-    "id": "64cf7d46-8127-4d69-88b6-f2c50dd26c96",
-    "name": "PH",
-    "username": "PH1",
-    "todos": tarefaPronta
-  }
-];
-
-// function procuraUsername(username){
-//   const resultado = users.find( usuario => usuario.username === username);
-//   return resultado;
-// }
-// function procuraName(name){
-//   const resultado = users.find(usuario=> usuario.name === name);
-//   return resultado;
-// }
-// function procuraID(id){
-//   const resultado = users.find(usuario => usuario.id === id);
-//   return resultado;
-// }
-
-// function retornaTarefaPorIndexUsuario(indexUsername,idTarefa){
-//   console.log(idTarefa);
-//   const resultado = users[indexUsername].todos.find(todo=> todo.id===idTarefa);
-//   return resultado;
-// }
-
-// function retornaTarefaPorIndexUsuario1(indexUsername,idTarefa){
-//   console.log(idTarefa);
-//   const resultado = users[indexUsername].todos.findIndex(todo=> todo.id===idTarefa);
-//   return resultado;
-// }
-
-// //Pegando o index do Objeto
-// function ProcuraIndexUsername(username){
-//   const resultado= users.findIndex(usuario=>usuario.username===username)
-//   return resultado;
-// }
+const tarefaPronta = [];
+const users = [];
 
 function checksExistsUserAccount(request, response, next) {
   // Complete aqui
+  const{username} = request.headers;
+  const findUsername = users.find(user => user.username === username);
+  
+  if(!findUsername){
+    return response.status(404).json({error: `Usuario nao existe, msg mid`});
+  }
   next();
 }
 
+
 app.post('/users', (request, response) => {
   // Complete aqui
-  //recebendo  name e username
+  
   const{name,username}=request.body;
 
   //Objeto usuario
@@ -80,12 +38,11 @@ app.post('/users', (request, response) => {
   };
 
   const findUsername = users.find(user => user.username === username);
-  if(!findUsername){
-    users.push(usuario);
-    console.log("Usuario adicionado com sucesso");  
-  }else{
+  if(findUsername){
     return response.status(400).json({error: `Usuario ja existe`});
   }
+
+  users.push(usuario);
   return response.status(201).json(usuario);
 });
 
@@ -97,15 +54,8 @@ app.get('/todos', checksExistsUserAccount, (request, response) => {
   const procuraUser = users.find((user)=>{ 
     return user.username=== username;
   });
-
-  if(!procuraUser){
-    console.log("Usuario nao existe");
-    return response.status(400).json({msg: `Usuario nao existe`}); 
-  }
-  return response.status(200).json(procuraUser.todos);
-  
+  return response.status(200).json(procuraUser.todos); 
 });
-
 
 app.post('/todos', checksExistsUserAccount, (request, response) => {
   // Complete aqui
@@ -118,37 +68,36 @@ app.post('/todos', checksExistsUserAccount, (request, response) => {
     deadline:new Date(deadline),
     created_at: new Date()
   }
+ 
+  const usuario = users.find(user => user.username === username);
 
-  // Percorrendo users
-  for( let i=0; i< users.length ; i++ ){
-    if(users[i].username === username){
-      console.log(newTodo);
-      users[i].todos.push(newTodo);
-    }
-  }  
-  return response.status(201).json(newTodo);
-  
+  if(!usuario){
+    return response.status(404).json({error: `Usuario nao existe`});
+  }
+
+  if(usuario){
+
+    usuario.todos.push(newTodo);
+    return response.status(201).json(newTodo);
+  }
+
 });
 
 app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
   // Complete aqui
-
   const{username} = request.headers;
   const {deadline,title} = request.body;
   const {id} = request.params; 
-  const usuario = users.find( user => user.username === username);
-  
-  if(!usuario){
-    return response.status(404).json({error: `Usuario nao encontrado`});
-  }
-
+  const usuario = users.find(user => user.username === username);
   const findTodo = usuario.todos.find( todo => todo.id === id);
-
+  
   if(!findTodo){
     return response.status(404).json({error: `Tarefa nao encontrada`});
   }
+  
   findTodo.deadline = deadline;
   findTodo.title = title;
+ 
   return response.status(200).json(findTodo);
 });
 
@@ -157,12 +106,9 @@ app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
   const {username} = request.headers;
   const {id} = request.params; 
   const{done}=request.body;
-
-  const usuario = users.find( user => user.username === username);
-  if(!usuario){
-    return response.status(404).json({error: `Usuario nao encontrado`});
-  }
+  const usuario = users.find(user => user.username === username);
   const findTodo = usuario.todos.find(todo =>todo.id ===id);
+
   if(!findTodo){
     return response.status(404).json({error: `Tarefa nao encontrada`});
   } 
@@ -172,20 +118,15 @@ app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
 
 app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
   // Complete aqui
-
   const {username}=request.headers;
-
   const{id}=request.params;
   const usuario = users.find(user => user.username === username);
-  if(!usuario){
-    return response.status(404).json({error: `Usuario nao encontrado`});
-  }
   const findTodo = usuario.todos.find(todo => todo.id === id);
+
   if(!findTodo){
     return response.status(404).json({error: `Tarefa nao encotrada`});
   }
   usuario.todos.splice(findTodo,1);
-  console.log("Tarefa removida com sucesso");
   return response.status(204).json(findTodo);
 });
 
