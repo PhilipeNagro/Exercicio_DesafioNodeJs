@@ -42,7 +42,7 @@ describe('Todos', () => {
       });
 
     const todoDate = new Date();
-
+      console.log(userResponse.body);
     const response = await request(app)
       .post('/todos')
       .send({
@@ -60,6 +60,9 @@ describe('Todos', () => {
     expect(validate(response.body.id)).toBe(true);
     expect(response.body.created_at).toBeTruthy();
   });
+
+  //=========================================================
+ 
 
   it('should be able to update a todo', async () => {
     const userResponse = await request(app)
@@ -108,6 +111,9 @@ describe('Todos', () => {
     });
   });
 
+  //=========================================================
+
+
   it('should not be able to update a non existing todo', async () => {
     const userResponse = await request(app)
       .post('/users')
@@ -130,7 +136,9 @@ describe('Todos', () => {
     expect(response.body.error).toBeTruthy();
   });
 
-  it('should be able to mark a todo as done', async () => {
+
+
+   it('should be able to mark a todo as done', async () => {
     const userResponse = await request(app)
       .post('/users')
       .send({
